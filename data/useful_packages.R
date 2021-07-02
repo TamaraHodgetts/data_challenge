@@ -12,8 +12,6 @@ library(ChIPpeakAnno)
 library(MotifDb)
 library(GenomicAlignments)
 library(BSgenome.Hsapiens.UCSC.hg19)
-# the last might be depricated
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
 
 #hg38 versions
