@@ -1,6 +1,6 @@
 # Data challenge
 # The directory is a folder called data
-setwd("~/data_challenge/data (1)/data")
+setwd("~/data_challenge/data_(1)/data")
 
 # import data
 atacseq_design <- read.delim(file = "atacseq_design.txt", header = TRUE)
@@ -37,6 +37,7 @@ library(utf8)
 # ensure tidyr, utf8 and dplyr are installed and loaded
 
 # separates the first column
+
 
 atacseq_peak_counts <- atacseq_peak_counts %>%
   separate(`start-end`, into = c("start", "end"), sep = "-")
@@ -109,9 +110,9 @@ BiocManager::install(c("ATACseqQC", "BiFET", "ChIPpeakAnno", "MotifDb", "Genomic
 # library(ChIPseeker)
 # 
 
-peakfile <- system.file("extdata", "atacseq_peak_counts.txt", package="ChIPseeker")
-ATAC_peaks_annotated <- annotatePeak(peakfile, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene)
-# peak should be GRanges object or a peak file...
+# peakfile <- system.file("extdata", "atacseq_peak_counts.txt", package="ChIPseeker")
+# ATAC_peaks_annotated <- annotatePeak(peakfile, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene)
+# # peak should be GRanges object or a peak file...
 
 
 # Differential expression analysis
@@ -121,15 +122,15 @@ install.packages("dplyr")
 library(dplyr)
 
 # All the peaks
-atacseq_peak_counts[ , 3:8]
-atacseq_peak_counts[ , 3:8] > 0
-summary(atacseq_peak_counts[ , 3:8] > 0)
-dim(atacseq_peak_counts[ , 3:8] > 0)
-# 173285      6
-discretised_atac_seq_peaks_df <- as.data.frame(atacseq_peak_counts[ , 3:8] > 0)
-
-atac_occurences_summary <- summary(discretised_atac_seq_peaks_df)
-atac_occurences_summary
+# atacseq_peak_counts[ , 3:8]
+# atacseq_peak_counts[ , 3:8] > 0
+# summary(atacseq_peak_counts[ , 3:8] > 0)
+# dim(atacseq_peak_counts[ , 3:8] > 0)
+# # 173285      6
+# discretised_atac_seq_peaks_df <- as.data.frame(atacseq_peak_counts[, 3:8] > 0)
+# 
+# atac_occurences_summary <- summary(discretised_atac_seq_peaks_df)
+# atac_occurences_summary
 # s84             s85             s86             s93             s94            s95         
 # Mode :logical   Mode :logical   Mode :logical   Mode :logical   Mode :logical   Mode:logical  
 # FALSE:1710      FALSE:2807      FALSE:690       FALSE:41        FALSE:28        TRUE:173285   
@@ -139,13 +140,12 @@ atac_occurences_summary
 
 # I want to keep only those peaks that are present in at least 3 replicates.
 # What rows are inconsistent between replicates?
-consistent_peaks_atac_seq_subset <- subset(discretised_atac_seq_peaks_df, (discretised_atac_seq_peaks_df$s84 > 0 & atacseq_peak_counts$s85 > 0 &atacseq_peak_counts$s86 > 0) | (atacseq_peak_counts$s93 > 0 & atacseq_peak_counts$s94 > 0 &atacseq_peak_counts$s95 > 0))
-dim(consistent_peaks_atac_seq_subset)
-# 173284      6
-
-consistent_peak_counts_atac_seq_subset <- subset(atacseq_peak_counts, (atacseq_peak_counts$s84 > 0 & atacseq_peak_counts$s85 > 0 &atacseq_peak_counts$s86 > 0) | (atacseq_peak_counts$s93 > 0 & atacseq_peak_counts$s94 > 0 &atacseq_peak_counts$s95 > 0))
-dim(consistent_peak_counts_atac_seq_subset)
+consistent_peak_atac_seq_subset <- subset(atacseq_peak_counts, (atacseq_peak_counts$s84 > 0 & atacseq_peak_counts$s85 > 0 &atacseq_peak_counts$s86 > 0) | (atacseq_peak_counts$s93 > 0 & atacseq_peak_counts$s94 > 0 &atacseq_peak_counts$s95 > 0))
+dim(consistent_peak_atac_seq_subset)
 # 173284      8
+
+dim(atacseq_peak_counts)
+# 173285      8
 # There is one peak that is not consistently measured in either the control or treatment group. 
 # this will be filtered out.
 
@@ -185,21 +185,23 @@ dim(consistent_peak_counts_atac_seq_subset)
 chr_vec <- rep("chr", 173284)
 length(chr_vec)
 
-consistent_peak_counts_atac_seq_subset <- consistent_peak_counts_atac_seq_subset %>%
+consistent_peak_atac_seq_subset <- consistent_peak_atac_seq_subset %>%
   mutate(chr_vec = chr_vec) %>%
   unite("seqnames", chr_vec, chr, sep = "")
 
-consistent_peak_counts_atac_seq_subset
+consistent_peak_atac_seq_subset
+
+library(GenomicRanges)
 
 myPeaks <- GRanges(
-  seqnames = consistent_peak_counts_atac_seq_subset$seqnames,
-  ranges = consistent_peak_counts_atac_seq_subset$`start-end`,
-  control_1 = consistent_peak_counts_atac_seq_subset$s84,
-  control_2 = consistent_peak_counts_atac_seq_subset$s85,
-  control_3 = consistent_peak_counts_atac_seq_subset$s86,
-  treated_1 = consistent_peak_counts_atac_seq_subset$s93,
-  treated_2 = consistent_peak_counts_atac_seq_subset$s94,
-  treated_3 = consistent_peak_counts_atac_seq_subset$s95,)
+  seqnames = consistent_peak_atac_seq_subset$seqnames,
+  ranges = consistent_peak_atac_seq_subset$`start-end`,
+  control_1 = consistent_peak_atac_seq_subset$s84,
+  control_2 = consistent_peak_atac_seq_subset$s85,
+  control_3 = consistent_peak_atac_seq_subset$s86,
+  treated_1 = consistent_peak_atac_seq_subset$s93,
+  treated_2 = consistent_peak_atac_seq_subset$s94,
+  treated_3 = consistent_peak_atac_seq_subset$s95,)
 
 myPeaks
 
@@ -259,13 +261,13 @@ library(tidyr)
 myPeaks
 
 myPlot <- as.data.frame(elementMetadata(myPeaks)) %>% as.matrix %>% t %>% prcomp %>% .$x %>% data.frame %>% mutate(Samples = rownames(.)) %>% 
-  mutate(Group = gsub("_\\d", "", Samples)) %>% ggplot(aes(x = PC1, y = PC2, colour = Group)) + geom_point(size = 5)
+  mutate(Group = gsub("_//d", "", Samples)) %>% ggplot(aes(x = PC1, y = PC2, colour = Group)) + geom_point(size = 5)
 
 myPlot
 
 pdf("PCA of atac-seq data (treatment and control).pdf")
 as.data.frame(elementMetadata(myPeaks)) %>% as.matrix %>% t %>% prcomp %>% .$x %>% data.frame %>% mutate(Samples = rownames(.)) %>% 
-  mutate(Group = gsub("_\\d", "", Samples)) %>% ggplot(aes(x = PC1, y = PC2, colour = Group)) + geom_point(size = 5)
+  mutate(Group = gsub("_//d", "", Samples)) %>% ggplot(aes(x = PC1, y = PC2, colour = Group)) + geom_point(size = 5)
 dev.off()
 
 
@@ -278,7 +280,7 @@ dim(atac_seq_peaks_df)
 # 173284     11
 
 dim(consistent_peak_counts_atac_seq_subset)
-#  173284     8
+#  173284     7
 
 # Number of rows is the same as the atacseq_peak_counts object
 
@@ -296,7 +298,7 @@ dim(atac_seq_peaks_df)
 dim(consistent_peak_counts_atac_seq_subset)
 # 173284      8
 
-subsetted_atac_seq_peak_counts <- consistent_peak_counts_atac_seq_subset[, 3:8]
+subsetted_atac_seq_peak_counts <- consistent_peak_atac_seq_subset[, 3:8]
 subsetted_atac_seq_peak_counts
 dim(subsetted_atac_seq_peak_counts)
 
@@ -332,6 +334,7 @@ plotPCA(atac_Rlog, intgroup = "Group", ntop = nrow(atac_Rlog)) +
       "PCA plot of ATAC-seq dataset"))
 dev.off()
 
+
 # Differential open analysis
 library(DESeq2)
 library(rtracklayer)
@@ -354,8 +357,8 @@ save(atac_seq_control_treatment, file="atac_seq_deseq2.Rda")
 BiocManager::install("TxDb.Hsapiens.UCSC.hg38.knownGene")
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
-toOverLap <- promoters(TxDb.Hsapiens.UCSC.hg38.knownGene, 500, 500)
-toOverLap
+# toOverLap <- promoters(TxDb.Hsapiens.UCSC.hg38.knownGene, 500, 500)
+# toOverLap
 
 toOverLap_genes <- genes(TxDb.Hsapiens.UCSC.hg38.knownGene, columns = "gene_id", filter=NULL, single.strand.genes.only=TRUE)
 toOverLap_genes
@@ -363,15 +366,11 @@ toOverLap_genes
 
 # subsetting regions of significantly enriched open chromatin
  atac_seq_control_treatment_significant <- atac_seq_control_treatment[(!is.na(atac_seq_control_treatment$padj) & 
-                                                                         atac_seq_control_treatment$padj < 0.05) & atac_seq_control_treatment %over% toOverLap, ]
+                                                                         atac_seq_control_treatment$padj < 0.01) & atac_seq_control_treatment %over% toOverLap_genes, ]
 
  atac_seq_control_treatment_significant
  
-# atac_seq_control_treatment_significant_genes <- atac_seq_control_treatment[(!is.na(atac_seq_control_treatment$padj) & 
-#                                                                          atac_seq_control_treatment$padj < 0.05) & atac_seq_control_treatment %over% toOverLap_genes, ]
-#  
-# atac_seq_control_treatment_significant_genes
-# 17978
+# 11015
 # The filtering is the same, regartless of whether is uses the genes or promoters for the gene annotation.  
  
 # Warning message:
@@ -382,13 +381,10 @@ toOverLap_genes
 makebedtable(atac_seq_control_treatment_significant, "atac_seq_control_treatment_significant.html", basedirectory = getwd())
 
 
-?makebedtable
-getwd()
-
 # I can subset the statistically significant ATAC-seq peaks
 
 # atac_seq_control_treatment_significant <- atac_seq_control_treatment[(!is.na(atac_seq_control_treatment$padj) & 
-#                                                             atac_seq_control_treatment$padj < 0.05), ]
+#                                                             atac_seq_control_treatment$padj < 0.01), ]
 # 
 # atac_seq_control_treatment_significant
 
@@ -464,6 +460,8 @@ dev.off()
 # rnaseq_gene_counts
 # 
 # rnaseq_annotation_united$chr
+install.packages("dplyr")
+library(dplyr)
 
 rnaseq_annotation %>%
   unite("start-end", start:end, sep = "-", remove = FALSE)
@@ -494,7 +492,7 @@ summary(rnaseq_annotation_united$featureid == rnaseq_gene_counts$featureid)
 
 # Subsetting consistent RNA-seq peaks
 consistent_peak_annotations_rna_seq_subset <- subset(rnaseq_annotation_united, (rnaseq_gene_counts$s69 > 0 & rnaseq_gene_counts$s70 > 0 &rnaseq_gene_counts$s71 > 0) | (rnaseq_gene_counts$s75 > 0 & rnaseq_gene_counts$s76 > 0 &rnaseq_gene_counts$s77 > 0))
-dim(consistent_peak_counts_rna_seq_subset)
+dim(consistent_peak_annotations_rna_seq_subset)
 #  20289    33
 consistent_peak_annotations_rna_seq_subset$seqnames
 
@@ -539,13 +537,13 @@ library(tidyr)
 myPeaks_rna_seq
 
 myPlot_rna_seq <- as.data.frame(elementMetadata(myPeaks_rna_seq)) %>% as.matrix %>% t %>% prcomp %>% .$x %>% data.frame %>% mutate(Samples = rownames(.)) %>% 
-  mutate(Group = gsub("_\\d", "", Samples)) %>% ggplot(aes(x = PC1, y = PC2, colour = Group)) + geom_point(size = 5)
+  mutate(Group = gsub("_//d", "", Samples)) %>% ggplot(aes(x = PC1, y = PC2, colour = Group)) + geom_point(size = 5)
 
 myPlot_rna_seq
 
 pdf("PCA of rna-seq data (treatment and control).pdf")
 as.data.frame(elementMetadata(myPeaks_rna_seq)) %>% as.matrix %>% t %>% prcomp %>% .$x %>% data.frame %>% mutate(Samples = rownames(.)) %>% 
-  mutate(Group = gsub("_\\d", "", Samples)) %>% ggplot(aes(x = PC1, y = PC2, colour = Group)) + geom_point(size = 5)
+  mutate(Group = gsub("_//d", "", Samples)) %>% ggplot(aes(x = PC1, y = PC2, colour = Group)) + geom_point(size = 5)
 dev.off()
 
 # Differential accessibility analysis for RNA seq
@@ -607,9 +605,11 @@ library(rtracklayer)
 library(BSgenome.Hsapiens.UCSC.hg19)
 library(tracktables)
 
-rna_seq_control_treatment_1 <- results(rnaDDS, c("Group", "control", "treated"), format = "GRanges")
-rna_seq_control_treatment_2 <- results(rnaDDS, c("Group", "treated", "control"), format = "GRanges")
-rm(rna_seq_control_treatment_1, rna_seq_control_treatment_2)
+# rna_seq_control_treatment_1 <- results(rnaDDS, c("Group", "control", "treated"), format = "GRanges")
+# rna_seq_control_treatment_2 <- results(rnaDDS, c("Group", "treated", "control"), format = "GRanges")
+# rm(rna_seq_control_treatment_1, rna_seq_control_treatment_2)
+
+rna_seq_control_treatment <- results(rnaDDS, c("Group", "control", "treated"), format = "GRanges")
 
 rna_seq_control_treatment <- rna_seq_control_treatment[order(rna_seq_control_treatment$pvalue)]
 rna_seq_control_treatment
@@ -635,8 +635,8 @@ save(rna_seq_control_treatment, file="rna_seq_deseq2.Rda")
 BiocManager::install("TxDb.Hsapiens.UCSC.hg38.knownGene")
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
-toOverLap_promoters <- promoters(TxDb.Hsapiens.UCSC.hg38.knownGene, 500, 500)
-toOverLap_promoters
+#toOverLap_promoters <- promoters(TxDb.Hsapiens.UCSC.hg38.knownGene, 500, 500)
+#toOverLap_promoters
 
 toOverLap_genes <- genes(TxDb.Hsapiens.UCSC.hg38.knownGene, columns = "gene_id", filter=NULL, single.strand.genes.only=TRUE)
 toOverLap_genes
@@ -644,11 +644,13 @@ toOverLap_genes
 
 # subsetting regions of significantly enriched open chromatin (in a 1000 bp distance from a promotor)
 rna_seq_control_treatment_significant <- rna_seq_control_treatment[(!is.na(rna_seq_control_treatment$padj) & 
-                                                                      rna_seq_control_treatment$padj < 0.05) & rna_seq_control_treatment %over% toOverLap_promoters, ]
+                                                                      rna_seq_control_treatment$padj < 0.01) & rna_seq_control_treatment %over% toOverLap_genes, ]
 
 rna_seq_control_treatment_significant
-
+# 5077
 makebedtable(rna_seq_control_treatment_significant, "rna_seq_control_treatment_significant.html", basedirectory = getwd())
+
+save(rna_seq_control_treatment_significant,file="significant_deseq2_rna-seq_peaks.Rda")
 
 
 # Annotation for differential atac-seq peaks
@@ -662,40 +664,43 @@ library(ChIPseeker)
 rna_seq_control_treatment_significant
 atac_seq_control_treatment_significant
 
+?annotatePeak
 
-anno_atac_peaks <- annotatePeak(atac_seq_control_treatment_significant, TxDb = TxDb.Hsapiens.UCSC.hg38.knownGene)
+anno_atac_peaks <- annotatePeak(atac_seq_control_treatment_significant, tssRegion=c(-3000, 3000), TxDb = TxDb.Hsapiens.UCSC.hg38.knownGene)
 anno_atac_peaks
-
 # Annotated peaks generated by ChIPseeker
-# 17978/17978  peaks were annotated
-# Genomic Annotation Summary:
-#   Feature   Frequency
-# 9    Promoter (<=1kb) 13.32740016
-# 10   Promoter (1-2kb)  5.62353988
-# 11   Promoter (2-3kb)  5.09511625
-# 4              5' UTR  0.45055067
-# 3              3' UTR  3.52653243
-# 1            1st Exon  1.14584492
-# 7          Other Exon  4.96161976
-# 2          1st Intron 19.55167427
-# 8        Other Intron 44.96606964
-# 6  Downstream (<=300)  0.01112471
-# 5   Distal Intergenic  1.34052731
-
-anno_rna_peaks <- annotatePeak(rna_seq_control_treatment_significant, TxDb = TxDb.Hsapiens.UCSC.hg38.knownGene)
-anno_rna_peaks
-# Annotated peaks generated by ChIPseeker
-# 6363/6363  peaks were annotated
+#11015/11015  peaks were annotated
 # Genomic Annotation Summary:
 #   Feature  Frequency
-# 5 Promoter (<=1kb) 97.9726544
-# 6 Promoter (1-2kb)  0.2828854
-# 7 Promoter (2-3kb)  0.2828854
-# 3           5' UTR  0.2200220
-# 2           3' UTR  0.5814867
-# 1         1st Exon  0.5500550
-# 4       Other Exon  0.1100110
+# 8   Promoter (<=1kb) 12.5646845
+# 9   Promoter (1-2kb)  5.4380390
+# 10  Promoter (2-3kb)  5.2473899
+# 4             5' UTR  0.4993191
+# 3             3' UTR  3.7948252
+# 1           1st Exon  1.2074444
+# 6         Other Exon  5.0385837
+# 2         1st Intron 19.5097594
+# 7       Other Intron 45.3835679
+# 5  Distal Intergenic  1.3163867
 
+rna_seq_control_treatment_significant_df
+
+anno_rna_peaks <- annotatePeak(rna_seq_control_treatment_significant, tssRegion=c(-3000, 3000), TxDb = TxDb.Hsapiens.UCSC.hg38.knownGene)
+anno_rna_peaks
+# Annotated peaks generated by ChIPseeker
+# 5077/5077  peaks were annotated
+# Genomic Annotation Summary:
+#   Feature   Frequency
+# 5 Promoter (<=1kb) 98.30608627
+# 6 Promoter (1-2kb)  0.25605673
+# 7 Promoter (2-3kb)  0.25605673
+# 3           5' UTR  0.15757337
+# 2           3' UTR  0.53181012
+# 1         1st Exon  0.39393343
+# 4       Other Exon  0.09848336
+
+# If I reduce the range, nearly all is promoter associated. 
+# It's and Chip-seq function, applied to ATAC- and RNA-seq data (with generally shorter reads)
 
 rna_seq_control_treatment_significant_df <- as.data.frame(rna_seq_control_treatment_significant)
 rna_seq_control_treatment_significant_df
@@ -736,6 +741,9 @@ library(ggupset)
 upsetplot(anno_rna_peaks)
 upsetplot(anno_atac_peaks)
 
+?upsetplot
+# There's another upsetplot in the enrichplot library
+
 pdf("Upset_plot_atac_seq_peak_annotation.pdf")
 upsetplot(anno_atac_peaks)
 dev.off()
@@ -745,45 +753,576 @@ upsetplot(anno_rna_peaks)
 dev.off()
 
 # Subsetting those RNA-seq peaks that are transcriptionally enriched
+# 
+# atac_seq_control_treatment_significant
+# rna_seq_control_treatment_significant
+# 
+# # Use a filtering join
+# rna_seq_control_treatment_significant
+# 
+# rna_seq_control_treatment_significant_df
+# dim(rna_seq_control_treatment_significant_df)
+# # Uniting the start and end
+# rna_seq_control_treatment_significant_df <- rna_seq_control_treatment_significant_df %>%
+#   unite("start-end", start:end, sep = "-", remove = FALSE) 
+# 
+# rna_seq_control_treatment_significant_df
+# view(rna_seq_control_treatment_significant_df)
+# 
+# rnaseq_annotation_united
+# view(rnaseq_annotation_united)
+# 
+# # Joining the dfs
+# joined_df <- semi_join(rnaseq_annotation_united, rna_seq_control_treatment_significant_df, by = "seqnames", "start", "end")
+# joined_df
+# 
+# dim(rnaseq_annotation_united)
+# # 58051    33
+# 
+# dim(rna_seq_control_treatment_significant_df)
+# # 6363   11
+# 
+# dim(joined_df)
+# # 57955    33
+# 
+# # TSSs
+# library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+# TSSs <- resize(genes(TxDb.Hsapiens.UCSC.hg19.knownGene), fix = "start", 1)
+# TSSs
 
+
+# Visualising distance or reads to the TSS
+pdf("TSS_distance_RNA_peaks.pdf")
+plotDistToTSS(anno_rna_peaks,
+              title="Distribution of RNA-peaks/nrelative to TSS")
+dev.off()
+
+pdf("TSS_distance_ATAC_peaks.pdf")
+plotDistToTSS(anno_atac_peaks,
+              title="Distribution of ATAC-peaks/nrelative to TSS")
+dev.off()
+
+summary(anno_rna_peaks_df$width)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 65    8946   23949   46699   57223 1193736 
+
+summary(consistent_peak_annotations_rna_seq_subset$width)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 50    3706   14698   40766   43826 2304640
+
+summary(rnaseq_annotation$width)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 8     527    2575   23267   17541 2304640 
+
+# ANalysing differential accessibility expression analysis results and gene annotation
+anno_atac_peaks_df <- as.data.frame(anno_atac_peaks)
+view(anno_atac_peaks_df)
+
+anno_rna_peaks_df <- as.data.frame(anno_rna_peaks)
+view(anno_rna_peaks_df)
+
+# Joining the dfs
+summary(colnames(anno_atac_peaks_df) == colnames(anno_rna_peaks_df))
+# Mode    TRUE 
+# logical      20 
+
+colnames(anno_atac_peaks_df)
+# [1] "seqnames"       "start"          "end"            "width"          "strand"         "baseMean"       "log2FoldChange" "lfcSE"         
+# [9] "stat"           "pvalue"         "padj"           "annotation"     "geneChr"        "geneStart"      "geneEnd"        "geneLength"    
+# [17] "geneStrand"     "geneId"         "transcriptId"   "distanceToTSS" 
+
+joined_df_transcriptId <- semi_join(anno_rna_peaks_df, anno_atac_peaks_df, by = "transcriptId")
+joined_df_transcriptId
+dim(joined_df_transcriptId)
+# 446  20
+
+# joined_df_gene <- semi_join(anno_rna_peaks_df, anno_atac_peaks_df, by = c("geneStart", "geneEnd"))
+# joined_df_gene
+# dim(joined_df_gene)
+# 768  20
+
+joined_df_geneId <- semi_join(anno_rna_peaks_df, anno_atac_peaks_df, by = c("geneId", "transcriptId"))
+joined_df_geneId
+dim(joined_df_geneId)
+# 446  20
+
+save(joined_df_geneId,file="Joined_ATAC_and_RNA_seq_df.Rda")
+
+# 
+
+significant_transcript_Ids <- joined_df_geneId$transcriptId
+significant_gene_Ids <- joined_df_geneId$geneId
+
+joined_df_geneId
+
+# Save this data to a file and search it in eDirect
+
+# Q2: Identifying enriched transcriptional programs
+BiocManager::install("ReactomePA")
+library(ReactomePA)
+
+BiocManager::install("org.Hs.eg.db")
+library(org.Hs.eg.db)
+
+dim(anno_rna_peaks_df)
+#5077   20
+dim(joined_df_geneId)
+# 446  20
+summary(colnames(anno_rna_peaks_df) == colnames(joined_df_geneId))
+# Mode    TRUE 
+# logical   20
+
+rm(pathway1)
+pathways_atac <- enrichPathway(as.data.frame(anno_atac_peaks)$geneId)
+pathways_atac
+head(pathways_atac, 2)
+#      ID       Description GeneRatio   BgRatio       pvalue     p.adjust       qvalue
+# R-HSA-112316   R-HSA-112316   Neuronal System  166/2768 410/10856 8.954224e-12 1.347611e-08 1.144256e-08
+# R-HSA-9013149 R-HSA-9013149 RAC1 GTPase cycle   85/2768 185/10856 1.066587e-09 8.026070e-07 6.814932e-07
+
+pathways_atac_df <- as.data.frame(pathways_atac)
+
+pathways_rna <- enrichPathway(as.data.frame(anno_rna_peaks)$geneId)
+pathways_rna
+head(pathways_rna, 2)
+# ID               Description GeneRatio   BgRatio       pvalue     p.adjust       qvalue
+# R-HSA-187037 R-HSA-187037 Signaling by NTRK1 (TRKA)   61/2489 115/10856 1.837212e-12 2.750306e-09 2.084752e-09
+# R-HSA-166520 R-HSA-166520        Signaling by NTRKs   64/2489 134/10856 2.006324e-10 1.501734e-07 1.138325e-07
+
+pathways_rna_df <- as.data.frame(pathways_rna)
+pathways_atac_df$ID
+
+
+pdf("RNA_seq_pathway_enrichment.pdf")
+dotplot(pathways_rna) +
+  labs(
+    title = paste(
+      "Pathway enrichment analysis of significant RNA-seq peaks"))
+dev.off()
+
+pdf("RNA_seq_pathway_enrichment.pdf")
+dotplot(pathways_atac)
+labs(
+  title = paste(
+    "Pathway enrichment analysis of significant ATAC-seq peaks"))
+dev.off()
+
+# Identifying pathways in both programs
+joined_pathways <- semi_join(pathways_rna_df, pathways_atac_df, by = "ID")
+
+dim(joined_pathways)
+# 38  9
+
+# Saving the objects
+save(joined_pathways, file="enriched_transcriptional_programs.Rda")
+save(pathways_rna_df, file="rna_seq_pathway_enrichment.Rda")
+save(pathways_atac_df, file="atac_seq_pathway_enrichment.Rda")
+
+
+# Attempting to analyse GO term enrichment on the joined DF
+
+
+joined_df_geneId
+
+joined_df_geneId_united <- joined_df_geneId %>%
+  unite("peakid", start:end, sep = "-", remove = FALSE)
+
+myRanges <- GRanges(
+  seqnames = joined_df_geneId_united$seqnames,
+  ranges = joined_df_geneId_united$peakid,)
+
+myRanges
+
+anno_ranges <- annotatePeak(myRanges, tssRegion=c(-3000, 3000), TxDb = TxDb.Hsapiens.UCSC.hg38.knownGene)
+anno_ranges
+# Annotated peaks generated by ChIPseeker
+# 446/446  peaks were annotated
+# Genomic Annotation Summary:
+#   Feature  Frequency
+# 5 Promoter (<=1kb) 94.1704036
+# 6 Promoter (2-3kb)  0.4484305
+# 3           5' UTR  0.2242152
+# 2           3' UTR  2.9147982
+# 1         1st Exon  1.7937220
+# 4       Other Exon  0.4484305
+
+
+pdf("Pie_chart_rna_seq_peak_annotation.pdf")
+plotAnnoPie(anno_ranges)
+dev.off()
+
+upsetplot(anno_ranges)
+
+# Attempting to annotate the object
+# anno_ranges_df <- as.data.frame(anno_ranges)
+# 
+# pathways_join <- enrichPathway(as.data.frame(anno_ranges)$geneId)
+# pathways_join
+# head(pathways_join, 2)
+
+
+# joined_pathways
+# joined_df_geneId
+# 
+# enrichPathway(joined_df_geneId$geneId)
+# 
+# GR_joined_pathways <- joined_df_geneId
+# GR_joined_pathways$geneId
+# 
+# joined_pathways_enrichment <- enrichPathway(GR_joined_pathways$geneId)
+# joined_pathways_enrichment_df <- as.data.frame(joined_pathways_enrichment)
+
+# I think the sample is simply too small.
+
+# Visualising findings
+joined_pathways
+
+dim(joined_pathways)
+# 38  9
+
+joined_pathways_tidy <- joined_pathways %>%
+  separate(GeneRatio, into = c("numerator", "denominator")) %>%
+  mutate(gene_ratio_nr = as.double(numerator) / as.double(denominator))
+
+save(joined_pathways_tidy,file="joined_pathways_tidy.Rda")
+
+
+pdf("pathway_enrichment_plot.pdf")
+ggplot(data = joined_pathways_tidy) +
+  geom_point(mapping = aes(x = gene_ratio_nr, y = Description, color = p.adjust, size = p.adjust)) +
+  labs(
+    title = paste(
+      "Dotplot of pathway description against gene ratio"))
+dev.off()
+
+pdf("pathway_enrichment_plot_id.pdf")
+ggplot(data = joined_pathways_tidy) +
+  geom_point(mapping = aes(x = gene_ratio_nr, y = ID, color = p.adjust, size = p.adjust)) +
+  labs(
+    title = paste(
+      "Dotplot of pathway ID against gene ratio"))
+dev.off()
+
+# Kegg analysis
 atac_seq_control_treatment_significant
 rna_seq_control_treatment_significant
 
-# Use a filtering join
-rna_seq_control_treatment_significant
+save(atac_seq_control_treatment_significant,file="atac_seq_control_treatment_significant.Rda")
+save(rna_seq_control_treatment_significant,file="rna_seq_control_treatment_significant.Rda")
 
-rna_seq_control_treatment_significant_df
-dim(rna_seq_control_treatment_significant_df)
-# Uniting the start and end
-rna_seq_control_treatment_significant_df <- rna_seq_control_treatment_significant_df %>%
-  unite("start-end", start:end, sep = "-", remove = FALSE) 
+TxDb.Hsapiens.UCSC.hg38.knownGene
+files = c("atac_seq_control_treatment_significant", "rna_seq_control_treatment_significant")
 
-rna_seq_control_treatment_significant_df
-view(rna_seq_control_treatment_significant_df)
+peakAnnoList <- lapply(files, annotatePeak, TxDb=TxDb.Hsapiens.UCSC.hg38.knownGene,tssRegion=c(-3000, 3000), verbose=FALSE)
 
-rnaseq_annotation_united
-view(rnaseq_annotation_united)
 
-# Joining the dfs
-joined_df <- semi_join(rnaseq_annotation_united, rna_seq_control_treatment_significant_df, by = "seqnames", "start", "end")
-joined_df
+# gene <- seq2gene(peak, tssRegion = c(-1000, 1000), flankDistance = 3000, TxDb=txdb)
+# pathway2 <- enrichPathway(gene)
 
-dim(rnaseq_annotation_united)
-# 58051    33
 
-dim(rna_seq_control_treatment_significant_df)
-# 6363   11
+# combined kegg pathway analysis
+# ?compareCluster
+# 
+# txdb = TxDb.Hsapiens.UCSC.hg38.knownGene
+# 
+# files <- getSampleFiles()
+# files
+# 
+# files2 <- list(atac = "C:/Users/Tamara/Documents/data_challenge/data (1)/data/atac_seq_control_treatment_significant.Rda", rna = "C:/Users/Tamara/Documents/data_challenge/data (1)/data/rna_seq_control_treatment_significant.Rda")
+# files2
+# file.choose()
+# 
+# 
+# peakAnnoList <- lapply(files, annotatePeak, TxDb=txdb, tssRegion=c(-3000, 3000), verbose=FALSE)
+# peakAnnoList
+# 
+# peakAnnoList2 <- lapply(files2, annotatePeak, TxDb=txdb, tssRegion=c(-3000, 3000), verbose=FALSE)
+# peakAnnoList2
+# 
+# genes = lapply(peakAnnoList, function(i) as.data.frame(i)$geneId)
+# names(genes) = sub("_", "/n", names(genes))
+# summary(genes)
+# 
+# compKEGG <- compareCluster(geneCluster   = genes,
+#                            fun           = "enrichKEGG",
+#                            pvalueCutoff  = 0.05,
+#                            pAdjustMethod = "BH")
+# 
+# dotplot(compKEGG, showCategory = 15, title = "KEGG Pathway Enrichment Analysis")
 
-dim(joined_df)
-# 57955    33
+# Peak annotation comparison with Kegg
+anno_atac_peaks
+anno_rna_peaks
 
-# TSSs
-library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-TSSs <- resize(genes(TxDb.Hsapiens.UCSC.hg19.knownGene), fix = "start", 1)
-TSSs
+anno_atac_peaks_df$geneId
 
-# Plotting ATAC-seq signals of TSSs
-BiocManager::install("soGGi")
-library(soGGi)
 
-?regionPlot
+atac_enrichment <- enrichKEGG(anno_atac_peaks_df$geneId, organism = "hsa", keyType = "kegg", pvalueCutoff = 0.05, pAdjustMethod = "BH", minGSSize = 10, maxGSSize = 500, qvalueCutoff = 0.2, use_internal_data = FALSE)
+
+pdf("Kegg_ATACseq_pathway_enrichment.pdf")
+dotplot(atac_enrichment, showCategory = 15, title = "KEGG ATAC-seq Pathway Enrichment Analysis")
+dev.off()
+
+rna_enrichment <- enrichKEGG(anno_rna_peaks_df$geneId, organism = "hsa", keyType = "kegg", pvalueCutoff = 0.05, pAdjustMethod = "BH", minGSSize = 10, maxGSSize = 500, qvalueCutoff = 0.2, use_internal_data = FALSE)
+
+pdf("Kegg_RNA_seq_pathway_enrichment.pdf")
+dotplot(rna_enrichment, showCategory = 15, title = "KEGG RNA-seq Pathway Enrichment Analysis")
+dev.off()
+
+
+# Joining the dataframes
+atac_enrichment_df <- as.data.frame(atac_enrichment)
+rna_enrichment_df <- as.data.frame(rna_enrichment)
+
+# Identifying pathways in both programs
+Kegg_joined_pathways <- semi_join(atac_enrichment_df, rna_enrichment_df, by = "ID")
+
+dim(Kegg_joined_pathways)
+# 84  9
+# Kegg identifies more pathways
+
+Kegg_joined_pathways_tidy <- Kegg_joined_pathways %>%
+  arrange(desc(p.adjust)) %>%
+  separate(GeneRatio, into = c("numerator", "denominator")) %>%
+  mutate(gene_ratio_nr = as.double(numerator) / as.double(denominator)) 
+
+#%>%
+#  mutate(Description_fct = as.factor(Description))
+# ?desc
+# 
+# order <- order(Kegg_joined_pathways_tidy$p.adjust, decreasing = FALSE)
+# 
+# order(Kegg_joined_pathways_tidy$p.adjust, )
+# ordered_Kegg <- Kegg_joined_pathways_tidy[order, ]
+# ordered_Kegg
+# 
+# desc(Kegg_joined_pathways_tidy$p.adjust)
+# 
+# Kegg_joined_pathways$Description
+
+save(Kegg_joined_pathways_tidy,file="Kegg_joined_pathways_tidy.Rda")
+
+
+pdf("Kegg_pathway_enrichment_plot.pdf")
+ggplot(data = Kegg_joined_pathways_tidy) +
+  geom_point(mapping = aes(x = gene_ratio_nr, y = Description, color = p.adjust, size = p.adjust)) +
+  labs(
+    title = paste(
+      "Dotplot of Kegg pathway description against gene ratio"))
+dev.off()
+
+pdf("Kegg_pathway_enrichment_plot_id.pdf")
+ggplot(data = Kegg_joined_pathways_tidy) +
+  geom_point(mapping = aes(x = gene_ratio_nr, y = ID, color = p.adjust, size = p.adjust)) +
+  labs(
+    title = paste(
+      "Dotplot of Kegg pathway ID against gene ratio"))
+dev.off()
+
+
+# Gene coverage
+ATAC_cov <- covplot(myPeaks, xlab = "Chromosome Size (bp)",
+                    ylab = "Chromosome ID",
+                    title = "ATAC-seq Peaks over Chromosomes")
+RNA_cov <- covplot(myPeaks_rna_seq, xlab = "Chromosome Size (bp)",
+                   ylab = "Chromosome ID",
+                   title = "RNA-seq Peaks over Chromosomes")
+
+
+pdf("ATAC_peak_coverage_plot.pdf")
+covplot(myPeaks, xlab = "Chromosome Size (bp)", ylab = "Chromosome ID", title = "ATAC-seq Peaks over Chromosomes")
+dev.off()
+# The function works, but the issue might lie in the nr of peaks or perhaps chromosomal assignment is incertain due to shorter fragment length.
+
+pdf("RNA_peak_coverage_plot.pdf")
+covplot(myPeaks_rna_seq, xlab = "Chromosome Size (bp)", ylab = "Chromosome ID", title = "RNA-seq Peaks over Chromosomes")
+dev.off()
+
+# Coverage plot on consensus peaks
+joined_df_geneId
+dim(joined_df_geneId)
+# 446  20
+
+joined_df_geneId_tidy <- joined_df_geneId %>%
+  unite("peakid", start:end, sep = "-", remove = FALSE) 
+
+
+GR_consensus_peaks <- GRanges(seqnames = joined_df_geneId_tidy$seqnames,
+                              ranges = joined_df_geneId_tidy$peakid,)
+
+?covplot
+
+GR_consensus_peaks
+covplot(GR_consensus_peaks)
+
+pdf("Coverage_plot_RNA_and_ATAC_seq_consensus_peaks.pdf")
+covplot(GR_consensus_peaks, xlab = "Chromosome Size (bp)",
+        ylab = "Chromosome ID",
+        title = "Consensus Peaks of RNA- and ATAC-seq over Chromosomes")
+dev.off()
+
+# Saving the joined IDs
+Kegg_joined_IDs <- Kegg_joined_pathways_tidy$ID
+Kegg_joined_IDs
+
+# "hsa05132" "hsa04914" "hsa05017" "hsa05219" "hsa04670" "hsa04211" "hsa04370" "hsa04213" "hsa04668" "hsa05203"
+# "hsa04910" "hsa05211" "hsa04662" "hsa04144" "hsa05224" "hsa05167" "hsa04931" "hsa04810" "hsa05160" "hsa04210"
+# "hsa05170" "hsa05162" "hsa04218" "hsa04064" "hsa04625" "hsa05166" "hsa05417" "hsa05131" "hsa04917" "hsa05213"
+# "hsa04919" "hsa05231" "hsa05163" "hsa00230" "hsa05218" "hsa04666" "hsa05215" "hsa04664" "hsa04611" "hsa04658"
+# "hsa04140" "hsa05161" "hsa05202" "hsa04926" "hsa04722" "hsa04935" "hsa04912" "hsa04062" "hsa04930" "hsa04520"
+# "hsa05100" "hsa05225" "hsa05235" "hsa05210" "hsa04068" "hsa05165" "hsa01522" "hsa05221" "hsa05223" "hsa04928"
+# "hsa05212" "hsa04750" "hsa04380" "hsa04659" "hsa04725" "hsa04071" "hsa00562" "hsa04010" "hsa05135" "hsa05220"
+# "hsa05205" "hsa04934" "hsa04072" "hsa04070" "hsa05214" "hsa04390" "hsa04360" "hsa04012" "hsa05142" "hsa04015"
+# "hsa04510" "hsa04933" "hsa05222" "hsa04660"
+
+
+
+
+getwd()
+
+# Question 3: Identifying candidate TFs for regulation
+BiocManager::install("enrichTF")
+library(enrichTF)
+
+# files
+makebedtable(atac_seq_control_treatment_significant, "atac_seq_control_treatment_significant.html", basedirectory = getwd())
+
+makebedtable(rna_seq_control_treatment_significant, "rna_seq_control_treatment_significant.html", basedirectory = getwd())
+atacseq_peaks_bed <- read.delim(file = "atacseq_peaks.bed", header = FALSE, col.names = c("chr", "start", "end"))
+atac_seq_control_treatment_significant
+?read.delim
+
+head(atacseq_peaks_bed)
+# chr  start    end
+# 1   1  10002  10507
+# 2   1  20220  22634
+# 3   1  28573  30038
+# 4   1  37946  39588
+# 5   1  90823  91498
+# 6   1 107005 107256
+
+system.file(package = "enrichTF", )
+
+save(atacseq_peaks_bed,file="atacseq_peaks_bed.bed")
+# The format might require Chr prefix for column 1.
+
+foregroundBedPath <- system.file(package = "enrichTF", "vignettes","atacseq_peaks_bed.bed")
+# The path may be wrong
+foregroundBedPath
+
+# data.file <- "C:\Users\Tamara\Documents\data_challenge\data (1)"
+file.path("C:", "Users", "Tamara", "Documents", "data_challenge", "data_(1)", "data", "atacseq_peaks_bed.bed")
+path_to_file <- file.path("C:", "Users", "Tamara", "Documents", "data_challenge", "data_(1)", "data", "atacseq_peaks_bed.bed")
+path_to_file
+getwd()
+
+BiocManager::install("all_motif_rmdup")
+library(all_motif_rmdup)
+
+foregroundBedPath <- system.file(package = "enrichTF", system.file(path_to_file))
+foregroundBedPath
+
+gen <- genBackground(inputForegroundBed = foregroundBedPath)
+
+# PECA_TF_enrich(inputForegroundBed = foregroundBedPath, genome = "hg38") 
+# 
+# PECA_TF_enrich()
+# hg38 will have new functions
+
+# ?PECA_TF_enrich
+# PECA_TF_enrich(inputForegroundBed, genome, threads = 2, pipeName = "pipe", ...)
+printMap()
+
+setGenome("testgenome")
+
+sampleAnnotFn <- file.path("tcells", "samples.tsv")
+
+foregroundBedPath <- file.path("atac_bed","atacseq_peaks_bed.bed")
+
+foregroundBedPath <- system.file(package = "enrichTF", "atac_bed","atacseq_peaks_bed.bed")
+
+
+foregroundBedPath <- system.file(package = "enrichTF", "extdata","atacseq_peaks_bed")
+gen <- genBackground(inputForegroundBed = foregroundBedPath)
+
+?genBackground
+# inputForegroundBed should be a character scalar, the directory of the foreground BED file
+
+
+# Trying a different function
+# BiocManager::install("TFutils")
+# BiocManager::install("GenomicFiles")
+# 
+# 
+# TFutils::tftColl
+# 
+# grep("NFK", names(TFutils::tftColl), value=TRUE)
+# 
+# #
+# library(GenomicFiles)
+# data(fimo16)
+# fimo16
+
+# Trying different functions
+# install dependencies
+devtools::install_github("demuellae/muLogR")
+devtools::install_github("demuellae/muRtools")
+devtools::install_github("demuellae/muReportR")
+
+# install ChrAccR
+devtools::install_github("GreenleafLab/ChrAccR", dependencies=TRUE)
+
+# hg38 annotation package
+install.packages("https://muellerf.s3.amazonaws.com/data/ChrAccR/data/annotation/ChrAccRAnnotationHg38_0.0.1.tar.gz")
+library(ChrAccR)
+
+devtools::install_github("GreenleafLab/ChrAccRex")
+
+# visualising practice dataset
+library(ggplot2)
+# use a grid-less theme
+theme_set(muRtools::theme_nogrid())
+
+##############################
+# Retrying old code
+#sampleAnnotFn <- file.path("tcells", "samples.tsv")
+library(enrichTF)
+
+foregroundBedPath <- file.path("atac_bed","atacseq_peaks_bed.Rda")
+foregroundBedPath
+# "atac_bed/atacseq_peaks_bed.bed"
+
+data.file <- system.file(foregroundBedPath, package =  "enrichTF", lib.loc = NULL, mustWork = FALSE)
+# Could I use other packages?
+
+foregroundBedPath <- system.file(package = "enrichTF", "atac_bed","atacseq_peaks_bed.bed")
+
+gen <- genBackground(inputForegroundBed = foregroundBedPath)
+
+# Install 
+MotifDb::associateTranscriptionFactors()
+?associateTranscriptionFactors
+
+MotifDb::geneToMotif()
+
+# Peaks
+motif_peaks <- read.table("atacseq_peaks.bed", header=FALSE)
+
+atac_seq_control_treatment_significant
+atac_seq_control_treatment_significant_df <- as.data.frame(atac_seq_control_treatment_significant)
+
+
+
+atac_seq_control_treatment_significant_df <- atac_seq_control_treatment_significant_df[order(atac_seq_control_treatment_significant_df$padj)]
+
+atac_seq_control_treatment_significant <- atac_seq_control_treatment_significant[order(atac_seq_control_treatment_significant$padj)]
+atac_peaks_resized <-  resize(atac_seq_control_treatment_significant, width = 50, fix='center')
+
+install.packages("rGADEM")
+BiocManager::install("rGADEM")
+library(rGADEM)
+
+
+
+motif_peaks <- makeGRangesFromDataFrame(motif_peaks, keep.extra.columns = TRUE)
+
